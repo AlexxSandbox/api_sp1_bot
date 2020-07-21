@@ -1,16 +1,19 @@
+import logging
 import os
 import requests
 import telegram
 import time
 from dotenv import load_dotenv
 
-load_dotenv()
 
+load_dotenv()
 
 PRACTICUM_TOKEN = os.getenv("PRACTICUM_TOKEN")
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 PRAKTIKUM_URL = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
+
+logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(name)s - %(asctime)s - %(message)s')
 
 
 def parse_homework_status(homework):
@@ -23,10 +26,21 @@ def parse_homework_status(homework):
 
 
 def get_homework_statuses(current_timestamp):
+    log = logging.getLogger('Praktikum')
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
-    homework_statuses = requests.get(PRAKTIKUM_URL, headers=headers, params=params)
-    return homework_statuses.json()
+    params = {'from_date': 0}
+    try:
+        homework_statuses = requests.get(PRAKTIKUM_URL, headers=headers, params=params).json()
+
+        if 'homeworks' in homework_statuses:
+            return homework_statuses
+
+        elif 'message' in homework_statuses:
+            error_msg = homework_statuses['message']
+            raise KeyError(f'{error_msg}')
+
+    except KeyError as e:
+        log.error(str(e))
 
 
 def send_message(message):
@@ -43,6 +57,10 @@ def main():
             if new_homework.get('homeworks'):
                 send_message(parse_homework_status(new_homework.get('homeworks')[0]))
             current_timestamp = new_homework.get('current_date')
+
+            if current_timestamp is None:
+                current_timestamp = int(time.time())
+
             time.sleep(900)
 
         except Exception as e:
