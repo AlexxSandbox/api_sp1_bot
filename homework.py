@@ -13,6 +13,7 @@ PRAKTIKUM_URL = 'https://praktikum.yandex.ru/api/user_api/{}/'
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 TELEGRAM_URL = 'https://api.telegram.org/bot{}/{}'
+TELEGRAM_BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
 logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(name)s - %(asctime)s - %(message)s')
 
@@ -51,8 +52,7 @@ def get_homework_statuses(current_timestamp):
 
 
 def send_message(message):
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    return bot.send_message(chat_id=CHAT_ID, text=message)
+    return TELEGRAM_BOT.send_message(chat_id=CHAT_ID, text=message)
 
 
 def main():
