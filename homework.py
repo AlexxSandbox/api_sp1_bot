@@ -18,17 +18,16 @@ logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(name)s - 
 
 
 def parse_homework_status(homework):
-    if 'homework_name' in homework and 'status' in homework:
+    log = logging.getLogger('Praktikum')
+    if 'homework_name' not in homework and 'status' not in homework:
+        log.error('Ключи не найдены.')
+    else:
         homework_name = homework['homework_name']
         homework_status = homework['status']
-
         if homework_status == 'rejected':
             verdict = 'К сожалению в работе нашлись ошибки.'
         elif homework_status == 'approved':
             verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
-        else:
-            verdict = 'Но статус получить не удалось. Свяжитесь с ревьювером.'
-
         return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -38,16 +37,10 @@ def get_homework_statuses(current_timestamp):
     params = {'from_date': current_timestamp}
     request_url = PRAKTIKUM_URL.format('homework_statuses')
     try:
-        homework_statuses = requests.get(request_url, headers=headers, params=params).json()
-
-        if 'homeworks' in homework_statuses:
-            return homework_statuses
-        elif 'message' in homework_statuses:
-            error_msg = homework_statuses['message']
-            raise KeyError(f'{error_msg}')
-
-    except KeyError as e:
-        log.error(str(e))
+        homework_statuses = requests.get(request_url, headers=headers, params=params)
+        return homework_statuses.json()
+    except requests.exceptions.RequestException as e:
+            log.error(str(e))
 
 
 def send_message(message):
@@ -63,11 +56,7 @@ def main():
             new_homework = get_homework_statuses(current_timestamp)
             if new_homework.get('homeworks'):
                 send_message(parse_homework_status(new_homework.get('homeworks')[0]))
-            current_timestamp = new_homework.get('current_date')
-
-            if current_timestamp is None:
-                current_timestamp = int(time.time())
-
+            current_timestamp = new_homework.get('current_date') or int(time.time())
             time.sleep(900)
 
         except Exception as e:
