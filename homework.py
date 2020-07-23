@@ -15,8 +15,10 @@ CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 TELEGRAM_URL = 'https://api.telegram.org/bot{}/{}'
 TELEGRAM_BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
-logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(name)s - %(asctime)s - %(message)s')
-
+logging.basicConfig(filename='log.txt',
+                    level=logging.ERROR,
+                    format='%(name)s - %(asctime)s - %(message)s'
+                    )
 
 def parse_homework_status(homework):
     log = logging.getLogger('Praktikum')
@@ -33,15 +35,14 @@ def parse_homework_status(homework):
 
 
 def get_homework_statuses(current_timestamp):
-    log = logging.getLogger('Praktikum')
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
+    params = {'from_date': 0}
     request_url = PRAKTIKUM_URL.format('homework_statuses')
     try:
         homework_statuses = requests.get(request_url, headers=headers, params=params)
         return homework_statuses.json()
-    except requests.exceptions.RequestException as e:
-            log.error(str(e))
+    except requests.exceptions.RequestException:
+        return homework_statuses.json()
 
 
 def send_message(message):
@@ -50,7 +51,7 @@ def send_message(message):
 
 def main():
     current_timestamp = int(time.time())
-
+    log = logging.getLogger('Praktikum')
     while True:
         try:
             new_homework = get_homework_statuses(current_timestamp)
@@ -60,6 +61,7 @@ def main():
             time.sleep(900)
 
         except Exception as e:
+            log.error(e(str))
             print(f'Бот упал с ошибкой: {e}')
             time.sleep(5)
             continue
