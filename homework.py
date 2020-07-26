@@ -25,16 +25,16 @@ def parse_homework_status(homework):
     if not ('homework_name' in homework and 'status' in homework):
         log.error('Ключи не найдены.')
         return 'В ответе от Praktikum ключи на найдены.'
+
+    homework_name = homework['homework_name']
+    homework_status = homework['status']
+    if homework_status == 'rejected':
+        verdict = 'К сожалению в работе нашлись ошибки.'
+    elif homework_status == 'approved':
+        verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
     else:
-        homework_name = homework['homework_name']
-        homework_status = homework['status']
-        if homework_status == 'rejected':
-            verdict = 'К сожалению в работе нашлись ошибки.'
-        elif homework_status == 'approved':
-            verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
-        else:
-            verdict = 'Статус проверки определить не удалось. Свяжись с ревьювером.'
-        return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+        verdict = 'Статус проверки определить не удалось. Свяжись с ревьювером.'
+    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homework_statuses(current_timestamp):
